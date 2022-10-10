@@ -12,7 +12,8 @@ ratio라고 찾아보시면 이 값을 기준으로 눈을 감았다 라고 판�
 '''
 
 
-test_mode = True
+test_mode = True    # 테스트 모드
+avatar_mode = False  # 구현 예정
 
 # 변수들
 CEF_COUNTER =0   # 눈의 깜빡임에 관련된 변수, 눈을 감음 상태가 1프레임 감지될 때마다 1씩 추가된다.
@@ -20,6 +21,8 @@ TOTAL_BLINKS =0  # 눈을 몇번 깜빡였는 지 알 수 있는 변수, CEF_COU
 
 CLOSED_EYES_FRAME =3                # 눈을 깜빡였는지 판정하는 함수, n프레임만큼 감았다고 판정할시 시스템적으로 감았다 라고 판정
 FONTS =cv2.FONT_HERSHEY_COMPLEX     # 카메라실행시 옆에보이는 글자들 폰트
+
+blink_animation = 0      # 눈을 감은 판정이 떴을때 1, 아닐때 0
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -129,17 +132,32 @@ if __name__ == "__main__" :         # main 함수
                     #
                     if ratio > 5.5:
                         CEF_COUNTER += 1
+                        blink_animation = 1
                         # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
-                        utils.colorBackgroundText(frame, f'Blink', FONTS, 1.7, (int(frame_height / 2), 100), 2,
-                                                  utils.YELLOW, pad_x=6, pad_y=6, )
+                        utils.colorBackgroundText(frame, f'Blink', FONTS, 1.7, (int(frame_height / 2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
 
                     # else함수에 있는 내용은 깜빡인 횟수를 카운팅하는 내용인데 현재 목표로하는 구현내용은 이 기능이 필요없긴함. 그래도 일단은 넣어봄
-                    else:
+                    else :
+                        blink_animation = 0
                         if CEF_COUNTER > CLOSED_EYES_FRAME:
                             TOTAL_BLINKS += 1
                             CEF_COUNTER = 0
                     # cv.putText(frame, f'Total Blinks: {TOTAL_BLINKS}', (100, 150), FONTS, 0.6, utils.GREEN, 2)
                     utils.colorBackgroundText(frame, f'Total Blinks: {TOTAL_BLINKS}', FONTS, 0.7, (30, 150), 2)
+
+                    if avatar_mode :
+                        # 평상시 눈을 뜬 이미지, 눈을 감은 이미지 애니메이션 구현
+                        # 아래 if else문은 굳이...? 긴 싶다 변수로 애니메이션 값 넣으면 될듯
+                        if blink_animation == 1 :
+                            # avatar.py에서의 눈 감는 이미지 출력 애니메이션 구현
+                            print("눈 감는 이미지")
+                        else :
+                            # avatar.py에서의 눈 뜨는 이미지 출력 애니메이션 구현
+                            print("눈 뜨는 이미지")
+
+                    # 아래는 극 초기 mediapipe에서 제공하는 기본 툴로 간단하게 카메라가 돌아가고 얼마나 감지했다 는 내용을 안 내용
+                    # 얼굴감지를 수동으로 구현하였으므로 현재는 사용되지 않음, 하지만 일단 남겨봄
+                    # 만약 가상 캐릭터와 매칭을 시킨다면 아래내용은 제외
 
                     '''
                     mp_drawing.draw_landmarks(
