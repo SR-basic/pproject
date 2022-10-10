@@ -3,6 +3,8 @@ import mediapipe as mp
 import utils
 import numpy as np
 
+test_mode = True
+
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_face_mesh = mp.solutions.face_mesh
@@ -11,7 +13,7 @@ LEFT_EYE =[362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,
 RIGHT_EYE=[33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246]
 
 # 랜드마크를 찾아서 표시하는 함수, draw=true면 얼굴에 점을 찍는다.
-def landmarksDetection(img, results, draw=True):
+def landmarksDetection(img, results, draw=False):
     img_height, img_width= img.shape[:2]
     # 랜드마크의 [x,y]값에 캡쳐한 화면의 가로와 세로의 값을 곱해야 사용 가능
     mesh_coord = [(int(point.x * img_width), int(point.y * img_height)) for point in results.multi_face_landmarks[0].landmark]
@@ -20,6 +22,14 @@ def landmarksDetection(img, results, draw=True):
 
     # 각 랜드마크의 x,y좌표를 mesh_coord에 넣어 return시킨다.
     return mesh_coord
+
+def test_draw_eyeline(img,mesh_coords,test_mode):
+    if test_mode :
+        cv2.polylines(img, [np.array([mesh_coords[p] for p in LEFT_EYE], dtype=np.int32)], True, utils.GREEN, 1,
+                      cv2.LINE_AA)
+        cv2.polylines(img, [np.array([mesh_coords[p] for p in RIGHT_EYE], dtype=np.int32)], True, utils.GREEN, 1,
+                      cv2.LINE_AA)
+    return 0
 
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
 # drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
@@ -46,7 +56,7 @@ if __name__ == "__main__" :         # main 함수
 
             if results.multi_face_landmarks:
                 for face_landmarks in results.multi_face_landmarks:
-                    mesh_coords = landmarksDetection(frame, results, True)
+                    mesh_coords = landmarksDetection(frame, results, False) # True면 감지된 모든 랜드마크를 바로바로 보여줍니다.
                     '''
                     mp_drawing.draw_landmarks(
                         image=image,        
@@ -76,8 +86,7 @@ if __name__ == "__main__" :         # main 함수
                         .get_default_face_mesh_iris_connections_style())
                     '''
 
-                    cv2.polylines(frame, [np.array([mesh_coords[p] for p in LEFT_EYE], dtype=np.int32)], True, utils.GREEN, 1, cv2.LINE_AA)
-                    cv2.polylines(frame, [np.array([mesh_coords[p] for p in RIGHT_EYE], dtype=np.int32)], True, utils.GREEN, 1, cv2.LINE_AA)
+                    test_draw_eyeline(frame, mesh_coords, test_mode)
 
                 # 보기 편하게 이미지를 좌우 반전합니다.
                 cv2.imshow('MediaPipe Face Mesh(Puleugo)', cv2.flip(frame, 1))
