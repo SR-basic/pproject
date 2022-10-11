@@ -32,6 +32,7 @@ mp_face_mesh = mp.solutions.face_mesh
 
 LEFT_EYE =[362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398]
 RIGHT_EYE=[33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246]
+MOUTH = [78, 191, 80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95]
 
 # 랜드마크를 찾아서 표시하는 함수, draw=true면 얼굴에 점을 찍는다.
 def landmarksDetection(img, results, draw=False):
@@ -91,13 +92,46 @@ def blinkRatio(img, landmarks, right_indices, left_indices):
 
     ratio = (reRatio+leRatio)/2         #평균값
     return ratio
+# 눈의 감았다 판정이 종횡비추정으로 구하는것이 반응이 좋아 입도 같은방식으로 진행
+# 종횡비로 구하는 이유는 카메라와 사람과의 거리(깊이)에 관계없이 판정을 낼 수 있는 수단이기 때문
+def mouthRatio(img, landmarks, mouth_indices,test = False) :
+    # 오른쪽 눈
+    # 가로 라인
+    mh_right = landmarks[mouth_indices[0]]
+    mh_left = landmarks[mouth_indices[10]]
+    # 세로 라인
+    mv_top = landmarks[mouth_indices[5]]
+    mv_bottom = landmarks[mouth_indices[15]]
 
-def test_draw_eyeline(img,mesh_coords,test_mode):
+    if test :
+        cv2.line(img, mh_right, mh_left, utils.GREEN, 2)
+        cv2.line(img, mv_top, mv_bottom, utils.WHITE, 2)
+
+    mhDistance = euclaideanDistance(mh_right, mh_left)
+    mvDistance = euclaideanDistance(mv_top, mv_bottom)
+
+    # 입이 완벽히 감겨서 아래 비율을 구할때 divided by zero 오류를 막기위해 해당 코드 추가
+    if mvDistance == 0 :
+        mvDistance = 0.001
+
+    ratio = mhDistance/mvDistance     #입의 비율
+
+    return ratio
+
+# test_mode일때만 작동, 출력중인 카메라에 눈을 선으로 그려줍니다.
+def test_draw_eyeline(img,mesh_coords,test_mode) :
     if test_mode :
         cv2.polylines(img, [np.array([mesh_coords[p] for p in LEFT_EYE], dtype=np.int32)], True, utils.GREEN, 1,
                       cv2.LINE_AA)
         cv2.polylines(img, [np.array([mesh_coords[p] for p in RIGHT_EYE], dtype=np.int32)], True, utils.GREEN, 1,
                       cv2.LINE_AA)
+    return 0
+
+def test_draw_mouth(img,mesh_coords,test_mode) :
+    if test_mode :
+        cv2.polylines(img, [np.array([mesh_coords[p] for p in MOUTH], dtype=np.int32)], True, utils.GREEN, 1,
+                      cv2.LINE_AA)
+
     return 0
 
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
@@ -123,16 +157,16 @@ if __name__ == "__main__" :         # main 함수
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             results = face_mesh.process(rgb_frame)
 
-            if results.multi_face_landmarks:
+            if results.multi_face_landmarks:                            # 여러 얼굴을 감지하도록 되어있지만 구현 구조상 1로 고정한다.
                 for face_landmarks in results.multi_face_landmarks:
                     mesh_coords = landmarksDetection(frame, results, False) # True면 감지된 모든 랜드마크를 바로바로 보여줍니다.
-                    ratio = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
-                    utils.colorBackgroundText(frame, f'Ratio : {round(ratio, 2)}', FONTS, 0.7, (30, 100), 2, utils.PINK,
+                    eye_ratio = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
+                    utils.colorBackgroundText(frame, f'Ratio : {round(eye_ratio, 2)}', FONTS, 0.7, (30, 100), 2, utils.PINK,
                                               utils.YELLOW)
 
                     # ratio값을 변경하여 눈인식의 개인차 조정 가능
                     #
-                    if ratio > 5.5:
+                    if eye_ratio > 5.5:
                         CEF_COUNTER += 1
                         blink_animation = 1
                         # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
@@ -153,6 +187,8 @@ if __name__ == "__main__" :         # main 함수
                         avatar.show_avatar(blink_animation)
                         print(blink_animation)
                     blink_animation = 0
+
+                    mouth_ratio = mouthRatio(frame,mesh_coords, MOUTH, test=False)
                     # 아래는 극 초기 mediapipe에서 제공하는 기본 툴로 간단하게 카메라가 돌아가고 얼마나 감지했다 는 내용을 안 내용
                     # 얼굴감지를 수동으로 구현하였으므로 현재는 사용되지 않음, 하지만 일단 남겨봄
                     # 만약 가상 캐릭터와 매칭을 시킨다면 아래내용은 제외
@@ -187,6 +223,7 @@ if __name__ == "__main__" :         # main 함수
                     '''
 
                     test_draw_eyeline(frame, mesh_coords, test_mode)
+                    test_draw_mouth(frame, mesh_coords, test_mode)
 
                 # 보기 편하게 이미지를 좌우 반전합니다.
                 cv2.imshow('testmode', frame)
