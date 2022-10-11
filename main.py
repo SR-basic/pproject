@@ -25,7 +25,9 @@ CLOSED_EYES_FRAME =3                # 눈을 깜빡였는지 판정하는 함수
 FONTS =cv2.FONT_HERSHEY_COMPLEX     # 카메라실행시 옆에보이는 글자들 폰트
 
 blink_judge = 5.5        # 눈을 감은 판정을 결정하는 종횡비 수 (기본값 5.5)
-blink_animation = 0      # 눈을 감은 판정이 떴을때 1, 아닐때 0
+blink_animation = 0      # 눈을 감은 판정이 떴을때 1, 아닐때 0, 2는 1과  0사이의 애니메이션효과
+mouth_animation = 0      # 입의 움직임 0,1,2,3 숫자가 클수록 입의사이즈가 큼
+
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -123,12 +125,12 @@ def mouthRatio(img, landmarks, mouth_indices,test = False) :
 
 # 입 종횡비에 따라 어떤 입모양을 출력할 지 결정하는 함수 , 아바타모드가 켜져있다면 avatar.py에서 구현(예정)
 # 레이어 합성을통한 캐릭터 생성 이후 애니메이션 구현예정
-def mouth_judge (mouth_ratio,avatar_mode) :
+def mouth_judge (mouth_ratio) :
     mouth = 0
-    if mouth_ratio <= 1 :
+    if mouth_ratio <= 3 :
         utils.colorBackgroundText(frame, f'm.pic3 bgmouth', FONTS, 1.0, (int(frame_height / 2), 50), 2, utils.YELLOW, pad_x=6, pad_y=6, )
         mouth = 3
-    elif mouth_ratio <= 2.5 :
+    elif mouth_ratio <= 8 :
         utils.colorBackgroundText(frame, f'm.pic2 mlmouth', FONTS, 1.0, (int(frame_height / 2), 50), 2, utils.YELLOW,
                                   pad_x=6, pad_y=6, )
         mouth = 2
@@ -140,8 +142,8 @@ def mouth_judge (mouth_ratio,avatar_mode) :
         utils.colorBackgroundText(frame, f'm.pic0 nomouth', FONTS, 1.0, (int(frame_height / 2), 50), 2, utils.YELLOW,
                                   pad_x=6, pad_y=6, )
         mouth = 0
-    if avatar_mode :
-        return 0
+
+    return mouth
 # test_mode일때만 작동, 출력중인 카메라에 눈을 선으로 그려줍니다.
 def test_draw_eyeline(img,mesh_coords,test_mode) :
     if test_mode :
@@ -206,16 +208,19 @@ if __name__ == "__main__" :         # main 함수
                     # cv.putText(frame, f'Total Blinks: {TOTAL_BLINKS}', (100, 150), FONTS, 0.6, utils.GREEN, 2)
                     utils.colorBackgroundText(frame, f'Total Blinks: {TOTAL_BLINKS}', FONTS, 0.7, (30, 150), 2)
 
-                    if avatar_mode :
-                        # 평상시 눈을 뜬 이미지, 눈을 감은 이미지 애니메이션 구현
-                        avatar.show_avatar(blink_animation)
-                        print(blink_animation)
-                    blink_animation = 0
+
 
                     mouth_ratio = mouthRatio(frame,mesh_coords, MOUTH, test=False)
                     utils.colorBackgroundText(frame, f'Mouth Ratio : {round(mouth_ratio, 2)}', FONTS, 0.7, (30, 200), 2,
                                               utils.PINK, utils.YELLOW)
-                    mouth_judge(mouth_ratio,avatar_mode)
+                    mouth_animation = mouth_judge(mouth_ratio)
+
+                    if avatar_mode :
+                        # 평상시 눈을 뜬 이미지, 눈을 감은 이미지 애니메이션 구현
+                        avatar.show_avatar(blink_animation,mouth_animation)
+
+
+                    blink_animation = 0
 
 
                     # 아래는 극 초기 mediapipe에서 제공하는 기본 툴로 간단하게 카메라가 돌아가고 얼마나 감지했다 는 내용을 안 내용
