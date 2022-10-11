@@ -24,7 +24,7 @@ TOTAL_BLINKS =0  # 눈을 몇번 깜빡였는 지 알 수 있는 변수, CEF_COU
 CLOSED_EYES_FRAME =3                # 눈을 깜빡였는지 판정하는 함수, n프레임만큼 감았다고 판정할시 시스템적으로 감았다 라고 판정
 FONTS =cv2.FONT_HERSHEY_COMPLEX     # 카메라실행시 옆에보이는 글자들 폰트
 
-blink_judge = 5.5        # 눈을 감은 판정을 결정하는 종횡비 수 (기본값 5.5)
+blink_judge = 4.5        # 눈을 감은 판정을 결정하는 종횡비 수 (기본값 5.5)
 blink_animation = 0      # 눈을 감은 판정이 떴을때 1, 아닐때 0, 2는 1과  0사이의 애니메이션효과
 mouth_animation = 0      # 입의 움직임 0,1,2,3 숫자가 클수록 입의사이즈가 큼
 
