@@ -127,7 +127,7 @@ def mouthRatio(img, landmarks, mouth_indices,test = False) :
 # 레이어 합성을통한 캐릭터 생성 이후 애니메이션 구현예정
 def mouth_judge (mouth_ratio) :
     mouth = 0       # mouth 값이 작을수록 입 모양이 작음
-    if mouth_ratio <= 3 :
+    if mouth_ratio <= 2 :
         utils.colorBackgroundText(frame, f'm.pic3 bgmouth', FONTS, 1.0, (int(frame_height / 2), 50), 2, utils.YELLOW, pad_x=6, pad_y=6, )
         mouth = 3
     elif mouth_ratio <= 8 :
