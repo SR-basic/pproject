@@ -3,7 +3,10 @@ import mediapipe as mp
 import utils, math
 import avatar
 import numpy as np
-
+from keras.models import load_model
+from time import sleep
+from keras_preprocessing.image import img_to_array
+from keras_preprocessing import image
 '''
 blink_judge라고 찾아보시면 이 값을 기준으로 눈을 감았다 라고 판정하는 값이 있는데
 이 값을 딱히 만지지 않아도 감지가 될만큼 코드를 최적화 했습니다.
@@ -36,6 +39,14 @@ mp_face_mesh = mp.solutions.face_mesh
 LEFT_EYE =[362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398]
 RIGHT_EYE=[33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246]
 MOUTH = [78, 191, 80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95]
+
+# 아래 세 변수는 얼굴인식을 위한 변수
+face_classifier=cv2.CascadeClassifier('./face_emotion/haarcascade_frontalface_default.xml')
+classifier = load_model('./face_emotion/EmotionDetectionModel.h5')
+
+class_labels=['Angry','Happy','Neutral','Sad','Surprise']
+
+
 
 # 랜드마크를 찾아서 표시하는 함수, draw=true면 얼굴에 점을 찍는다.
 def landmarksDetection(img, results, draw=False):
@@ -160,6 +171,27 @@ def test_draw_mouth(img,mesh_coords,test_mode) :
 
     return 0
 
+def face_detection(img) :
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_classifier.detectMultiScale(gray, 1.3, 3)
+
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA)
+
+        if np.sum([roi_gray]) != 0:
+            roi = roi_gray.astype('float') / 255.0
+            roi = img_to_array(roi)
+            roi = np.expand_dims(roi, axis=0)
+
+            preds = classifier.predict(roi)[0]
+            label = class_labels[preds.argmax()]
+            label_position = (x, y)
+            cv2.putText(frame, label, label_position, cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
+        else:
+            cv2.putText(frame, 'No Face Found', (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
+
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
 # drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 cap = cv2.VideoCapture(0) #캡쳐되는 이미지 변수 : cap
@@ -182,6 +214,10 @@ if __name__ == "__main__" :         # main 함수
             frame_height, frame_width = frame.shape[:2]
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             results = face_mesh.process(rgb_frame)
+
+            # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            # faces = face_classifier.detectMultiScale(gray, 1.3, 5)
+            face_detection(frame)
 
             if results.multi_face_landmarks:                            # 여러 얼굴을 감지하도록 되어있지만 구현 구조상 1로 고정한다.
                 for face_landmarks in results.multi_face_landmarks:
@@ -214,6 +250,7 @@ if __name__ == "__main__" :         # main 함수
                     utils.colorBackgroundText(frame, f'Mouth Ratio : {round(mouth_ratio, 2)}', FONTS, 0.7, (30, 200), 2,
                                               utils.PINK, utils.YELLOW)
                     mouth_animation = mouth_judge(mouth_ratio)
+
 
                     if avatar_mode :
                         # 평상시 눈을 뜬 이미지, 눈을 감은 이미지 애니메이션 구현
