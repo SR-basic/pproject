@@ -259,7 +259,7 @@ if __name__ == "__main__" :         # main 함수
                     test_draw_eyeline(frame, mesh_coords, test_mode)
                     test_draw_mouth(frame, mesh_coords, test_mode)
 
-                # 보기 편하게 이미지를 좌우 반전합니다.
+
                 cv2.imshow('testmode', frame)
                 if cv2.waitKey(2) & 0xFF == 27:  # esc가 눌렸을 경우 종료
                     break
