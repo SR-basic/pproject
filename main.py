@@ -18,7 +18,7 @@ blink_judge라고 찾아보시면 이 값을 기준으로 눈을 감았다 라�
 
 
 test_mode = True    # 테스트 모드
-avatar_mode = True  # 구현 예정
+avatar_mode = False  # 구현 예정
 
 # 변수들
 CEF_COUNTER =0   # 눈의 깜빡임에 관련된 변수, 눈을 감음 상태가 1프레임 감지될 때마다 1씩 추가된다.
@@ -171,26 +171,32 @@ def test_draw_mouth(img,mesh_coords,test_mode) :
 
     return 0
 
-def face_detection(img) :
+def emotion_detection(img) :
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_classifier.detectMultiScale(gray, 1.3, 3)
+    detected_emotion = ""
 
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        roi_gray = gray[y:y + h, x:x + w]
-        roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA)
+    if len(faces) == 0 :
+        detected_emotion = "none"
+    else :
+        face = faces[0]
+        (x,y,w,h) = face
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)        # 얼굴감지를 한 부분을 네모로 그리기
+        utils.colorBackgroundText(frame, f'emotion detected', FONTS, 0.5, (x, y), 2, textColor=(255,255,255))
+        roi_gray = gray[y:y + h, x:x + w]                                   # 표정인식을 위한 gray_scale 변환
+        roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA) # 학습모델과 비교하기 위해 같은사이즈로 변환
 
-        if np.sum([roi_gray]) != 0:
-            roi = roi_gray.astype('float') / 255.0
-            roi = img_to_array(roi)
+        if np.sum([roi_gray]) != 0:                 # 즉, 관심영역이 비어있는 상태가 아니면 인식 진행
+            roi = roi_gray.astype('float') / 255.0  # 픽셀값 0~255을 계산하기위해 0~1의 값으로 만듬 + int > float
+            roi = img_to_array(roi)                 # 계산을 위해 이미지를 배열로 변환
             roi = np.expand_dims(roi, axis=0)
 
-            preds = classifier.predict(roi)[0]
-            label = class_labels[preds.argmax()]
-            label_position = (x, y)
-            cv2.putText(frame, label, label_position, cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
-        else:
-            cv2.putText(frame, 'No Face Found', (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
+            preds = classifier.predict(roi)[0]      # 딥러닝 자료를 가지고 판별
+            detected_emotion = class_labels[preds.argmax()]
+        else:                                       # 관심영역이 비어있는 상태면 인식 실패
+            detected_emotion = "none"
+
+    utils.colorBackgroundText(frame, f'emotion detected : {detected_emotion}', FONTS, 0.7, (30, 240), 2)
 
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
 # drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
@@ -217,7 +223,7 @@ if __name__ == "__main__" :         # main 함수
 
             # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # faces = face_classifier.detectMultiScale(gray, 1.3, 5)
-            face_detection(frame)
+            emotion_detection(frame)
 
             if results.multi_face_landmarks:                            # 여러 얼굴을 감지하도록 되어있지만 구현 구조상 1로 고정한다.
                 for face_landmarks in results.multi_face_landmarks:
