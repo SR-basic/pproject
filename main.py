@@ -13,13 +13,17 @@ from keras_preprocessing import image
 그떄마다 실행해서 프로그램에 부하가 덜 가게 하는게 어떨까 싶습니다.
 ctrl f 로 main함수의 emotion_detection부분의 호출을 time함수를 이용해서 n초마다 실행되게
 바꿀 수 있을까요?
+
+0.3초당 한번씩 실행 구현 완료
+
 '''
 
-
-test_mode = True    # 테스트 모드
-avatar_mode = False  # 구현 예정
+cam = True          # 카메라 프로그램이 켜집니다. 즉 실사용시엔 False가 될 예정
+test_mode = False   # 테스트 모드
+avatar_mode = True  # 판떼기 프로그램이 켜집니다
 
 # 변수들
+FRAME_COUNTER =0 # 카메라가 이미지를 받아오는 매 프레임을 수치화, 과부화 비중치가 높은 감정인식함수 지연호출
 CEF_COUNTER =0   # 눈의 깜빡임에 관련된 변수, 눈을 감음 상태가 1프레임 감지될 때마다 1씩 추가된다.
 TOTAL_BLINKS =0  # 눈을 몇번 깜빡였는 지 알 수 있는 변수, CEF_COUNTER의 값이 CLOSED_EYE_FRAME보다 값이 클시 1이 추가된다.
 
@@ -30,6 +34,7 @@ blink_judge = 4.5        # 눈을 감은 판정을 결정하는 종횡비 수 (�
 blink_animation = 0      # 눈을 감은 판정이 떴을때 1, 아닐때 0, 2는 1과  0사이의 애니메이션효과
 mouth_animation = 0      # 입의 움직임 0,1,2,3 숫자가 클수록 입의사이즈가 큼
 
+detected_emotion = "Neutral"    # 감정인식 값
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -170,13 +175,15 @@ def test_draw_mouth(img,mesh_coords,test_mode) :
 
     return 0
 
-def emotion_detection(img) :
+# 감정인식 함수, 카메라값을 받아들여 h5파일을 이용해 감정을 판단하고, 그 문자열을 반환
+def emotion_detection(img,before_emotion) :
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces = face_classifier.detectMultiScale(gray, 1.3, 3)
-    detected_emotion = ""
+    faces = face_classifier.detectMultiScale(gray, 1.2, 5)
+    detecte_emotion = before_emotion
+
 
     if len(faces) == 0 :
-        detected_emotion = "none"
+        detecte_emotion = before_emotion
     else :
         face = faces[0]
         (x,y,w,h) = face
@@ -191,11 +198,11 @@ def emotion_detection(img) :
             roi = np.expand_dims(roi, axis=0)
 
             preds = classifier.predict(roi)[0]      # 딥러닝 자료를 가지고 판별
-            detected_emotion = class_labels[preds.argmax()]
+            detecte_emotion = class_labels[preds.argmax()]
         else:                                       # 관심영역이 비어있는 상태면 인식 실패
-            detected_emotion = "none"
+            detecte_emotion = "none"
+    return detecte_emotion
 
-    utils.colorBackgroundText(frame, f'emotion detected : {detected_emotion}', FONTS, 0.7, (30, 240), 2)
 
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
 # drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
@@ -214,15 +221,16 @@ if __name__ == "__main__" :         # main 함수
                 raise IOError("웹캠 찾지 못함.")
                 break
 
+            FRAME_COUNTER += 1
             frame = cv2.resize(frame, None, fx=1.5, fy=1.5,
                                    interpolation=cv2.INTER_CUBIC)  # 원본의 가로 세로 fx,fy 배율, 리사이징 값
             frame_height, frame_width = frame.shape[:2]
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             results = face_mesh.process(rgb_frame)
 
-            # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # faces = face_classifier.detectMultiScale(gray, 1.3, 5)
-            emotion_detection(frame)
+            if FRAME_COUNTER %10 == 0 :     # 과부하가 꽤 되는 함수라 0.3초마다 한번씩 호출
+                detected_emotion = emotion_detection(frame,detected_emotion)
+            utils.colorBackgroundText(frame, f'emotion detected : {detected_emotion}', FONTS, 0.7, (30, 240), 2)
 
             if results.multi_face_landmarks:                            # 여러 얼굴을 감지하도록 되어있지만 구현 구조상 1로 고정한다.
                 for face_landmarks in results.multi_face_landmarks:
@@ -301,8 +309,8 @@ if __name__ == "__main__" :         # main 함수
                     test_draw_eyeline(frame, mesh_coords, test_mode)
                     test_draw_mouth(frame, mesh_coords, test_mode)
 
-
-                cv2.imshow('testmode', frame)
+                if cam :
+                    cv2.imshow('testmode', frame)
                 if cv2.waitKey(2) & 0xFF == 27:  # esc가 눌렸을 경우 종료
                     break
 
