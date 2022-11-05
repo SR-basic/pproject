@@ -31,12 +31,19 @@
 애니메이션이 겉으로 포장되는 가장 강력한 무기인데 이쪽에 집중하고싶다.
 로드맵은 대충 만들었고, UI의 경우 대충 파이썬 기본 UI로 만들어도 될 듯 하다. 버튼이 안좋아도 랩핑을 비주얼 좋게하는쪽으로
 
+[11.1] 감정인식모듈 이식 완료 솔직히 1~2일동안 다른사람이 만든거 쓱 싹해서 붙혀넣으면 될줄알았는데
+모델인식의 정확도라던가 함수가 실행되는데 무거움이 느껴진다던가 이러저런 요소를 해결하려다보니 시간이 오래걸림
+
+
 
 
 
 사용 
-openCV, mediapipe
+openCV, mediapipe, keras
 
 참고 서적
 1. python 예제로 배우는 OpenCV3.x  ,  홀을과학출판사  ,  Gabriel Garrido Calvo, Prateek Joshi 지음, 정성환, 조보호 공역
 2. openCV-Python으로 배우는 영상 처리 및 응용  ,  생능출판  ,  정성환, 배종욱 지음
+
+캡스톤 관련 찾아본 자료들 시트
+https://docs.google.com/spreadsheets/d/1uaS58P02hDIEeMUC4pls5TZT0gyg0dU_MzHDKCnh2uM/edit#gid=0
