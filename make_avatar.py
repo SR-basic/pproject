@@ -75,8 +75,10 @@ def make_body() :
     return 0
 
 def main():
-    not_bg = main_body.copy()
-    bg = np.zeros(not_bg, np.uint8)
+    bg_main_body = cv2.imread('./img/body/main_body.png', cv2.IMREAD_COLOR)
+    # gray = cv2.cvtColor(bg_main_body, cv2.COLOR_BGR2GRAY)
+
+    bg = np.zeros(bg_main_body.shape, np.uint8)
     bg_body = add_transparent_image(bg ,main_body)
     make_head(bg_body,cloth1)
 
