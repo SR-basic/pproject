@@ -23,15 +23,17 @@ def convert_CV_to_PIL (img) :
     pil_image = Image.fromarray(color_coverted)
     return pil_image
 
-def get_full_img (location,resize = 0.3, face = True) :
+def make_bg (img,color = (0,215,0)) :
+    bg_img = Image.new("RGBA",img.size,color)
+    return bg_img
+
+def get_full_img (location,resize = 0.3) :
     img = cv2.imread(location, cv2.IMREAD_UNCHANGED) # png 에서 알파값을 받아오는 함수...
     img = cv2.resize(img, None, fx=resize, fy=resize, interpolation=cv2.INTER_AREA)
-    if face :
-        cut_face(img)
+    # if face :
+        # cut_face(img)
     return img
 
-def cut_face(img) :
-    return 0
 
 '''
 def resize_pic(img) :
@@ -45,10 +47,13 @@ def resize_pic(img) :
 '''
 
 def main():
+
     main_head = get_full_img_verPIL('./img/body/main_head.png',False)
     main_body = get_full_img_verPIL('./img/body/main_body.png',False)
 
+    bg = make_bg(main_body)
     main_body = Image.alpha_composite(main_body,main_head)
+    main_body = Image.alpha_composite(bg,main_body)
 
     # main_body.paste(main_head,(0,0))
     main_body.show()
