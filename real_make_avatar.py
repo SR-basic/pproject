@@ -30,7 +30,7 @@ shift_x,shift_y = 0,10          #눈을 감았을떄 턱이 내려가는 애니�
 # bg = np.full(image_without_alpha.shape,(0,215,0), dtype=np.uint8)   # 크로마키 배경이미지
 
 # 몸과 머리를 나누어 make_body,make_head의 함수로 나누었지만 실제 개발상 레이어의 순서도가 바뀌고 실행의 최적화를 위해
-# 실제로 몸과 머리를 만들지는 않고 약간 혼합된 형태, 하지만 body가 back frame이고, head가 front frame이라는 개념만 알아주면 될듯하다.
+# 실제로 몸과 머리를 만들지는 않고 약간 혼합된 형태, 하지만 body가 back frame이고, hair가 front frame이라는 개념만 알아주면 될듯하다.
 def make_body(main_body,back_hair=None,shoe=None,pants=None,cloth=None,another1=None,another2=None,main_head=None) :
 
     body = []
@@ -64,7 +64,7 @@ def make_body(main_body,back_hair=None,shoe=None,pants=None,cloth=None,another1=
     return body
 
 
-def make_head(main_head,front_hair = None,another1 = None,another2=None) :
+def make_hair(front_hair,another1 = None,another2=None) :
     image_stack=[]
     if front_hair :
         image_stack.append(front_hair)
@@ -90,7 +90,7 @@ def make_body(layer_count) :
 # for test
 eyes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 mouth = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-def make_face(eyes123=[],mouth123=[]) :
+def make_face(eyes123=[],mouth123=[],front_head = None) :
     face=[]
     emotion = []
     mouths = []
@@ -100,6 +100,7 @@ def make_face(eyes123=[],mouth123=[]) :
             if eye//3 != mou//4 :
                 mou = (eye//3)*4+mou
             # 여기에 얼굴과 입 합성 함수
+            # + 앞머리 합성 함수
             mouths.append(i)
             i += 1
             print("face[",eye//3,"][",eye%3,"][",mou%4,"] = ",eyes[eye]," + ",mouth[mou])
@@ -141,9 +142,16 @@ def main():
     body = make_body(main_body,back_hair=back_hair, cloth=cloth, main_head=main_head)
     for i in range(len(body)) :
         body[i].show()
-    '''
-    head = make_head(main_head, front_hair=front_hair)
 
+    hair = make_hair(front_hair)
+    emotion = make_face(front_head=hair)
+    # 이러면 5*3*4의 앞얼굴 프레임이 생김
+
+    # for문을 이용하여 body와 emotion을 하나씩 전부 합성
+    # 3차원 배열을 유지하면서 body를 하나씩 합성하면 구현 쉬울듯
+
+    # 그후 cv로 변환하든지, 사진으로 저장을 한번 시키던지(True,False로 저장여부를 뭍는게 좋을듯함)
+    '''
     frame1 = Image.alpha_composite(body,head)
 
     shift_head = shift_img(head,shift_x,shift_y)
