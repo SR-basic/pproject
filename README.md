@@ -39,6 +39,7 @@
 clear시켜도 append된 값도 clear되버린다. .clear를 쓰지말고, =[]으로 직접 정의해주자
 
 
+
 사용 
 openCV, mediapipe, keras
 

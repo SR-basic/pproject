@@ -5,44 +5,69 @@ from PIL import Image
 from PIL import ImageChops
 import time
 
+'''
+이 함수는 판떼기를 만드는 함수 
+알파값을 이용한 이미지합성을 다룬다.
+'''
+
+
+
 visual_mode = True    # 이미지를 가져올때 전신 = False, 상반신 = True
 
 main_head = rd.get_full_img_verPIL('./img/body/main_head.png', visual_mode)
 main_body = rd.get_full_img_verPIL('./img/body/main_body.png', visual_mode)
 cloth = rd.get_full_img_verPIL('./img/body/cloth.png', visual_mode)
-hair = rd.get_full_img_verPIL('./img/head_parts/hair.png',visual_mode)
+# hair = rd.get_full_img_verPIL('./img/head_parts/hair.png',visual_mode)
+back_hair = rd.get_full_img_verPIL('./img/head_parts/back_hair.png',visual_mode)
+front_hair = rd.get_full_img_verPIL('./img/head_parts/front_hair.png',visual_mode)
 
 class_labels=['Angry','Happy','Neutral','Sad','Surprise']
+
+shift_x,shift_y = 0,10          #눈을 감았을떄 턱이 내려가는 애니메이션을 만들기위한 함수 y값만큼 턱이 내려간다.
 
 
 # image_without_alpha = main_body[:,:,:3]                             # 전체
 # bg = np.full(image_without_alpha.shape,(0,215,0), dtype=np.uint8)   # 크로마키 배경이미지
 
-def make_body(main_body,shoe=None,pants=None,cloth=None,another1=None,another2=None) :
-    bg = rd.make_bg(main_body)
-    image_stack = [main_body]
+# 몸과 머리를 나누어 make_body,make_head의 함수로 나누었지만 실제 개발상 레이어의 순서도가 바뀌고 실행의 최적화를 위해
+# 실제로 몸과 머리를 만들지는 않고 약간 혼합된 형태, 하지만 body가 back frame이고, head가 front frame이라는 개념만 알아주면 될듯하다.
+def make_body(main_body,back_hair=None,shoe=None,pants=None,cloth=None,another1=None,another2=None,main_head=None) :
 
-    if shoe :
-        image_stack.append(shoe)
-    if pants :
-        image_stack.append(pants)
-    if cloth :
-        image_stack.append(cloth)
-    if another1 :
-        image_stack.append(another1)
-    if another2 :
-        image_stack.append(another2)
+    body = []
+    for i in range(2) :
 
-    for image in image_stack :
-        bg = Image.alpha_composite(bg, image)
+        bg = rd.make_bg(main_body)
+        image_stack = [main_body]
+        if back_hair :
+            if i == 1:
+                back_hair = shift_img(back_hair, shift_x,shift_y)
+            image_stack.append(back_hair)
+        if shoe :
+            image_stack.append(shoe)
+        if pants :
+            image_stack.append(pants)
+        if cloth :
+            image_stack.append(cloth)
+        if another1 :
+            image_stack.append(another1)
+        if another2 :
+            image_stack.append(another2)
+        if main_head :
+            if i == 1:
+                main_head = shift_img(main_head, shift_x,shift_y)
+            image_stack.append(main_head)
+        for image in image_stack :
+            bg = Image.alpha_composite(bg, image)
 
-    return bg
+        body.append(bg)
+
+    return body
 
 
-def make_head(main_head,hair = None,another1 = None,another2=None) :
+def make_head(main_head,front_hair = None,another1 = None,another2=None) :
     image_stack=[]
-    if hair :
-        image_stack.append(hair)
+    if front_hair :
+        image_stack.append(front_hair)
     if another1 :
         image_stack.append(another1)
     if another2 :
@@ -92,7 +117,9 @@ def make_face(eyes123=[],mouth123=[]) :
     for i in range(5) :
         print(emotion[i])
 
-
+def shift_img(img,shift_x=0,shift_y=0) :
+    shifted_img = ImageChops.offset(img,shift_x,shift_y)
+    return shifted_img
 
 def check_exception(index):
     # Checks if any of the layers have a known exception with another layer
@@ -111,21 +138,20 @@ def main():
     # start_time = time.perf_counter()
 
 
-    # main_body = Image.alpha_composite(main_body, main_head)
-    # main_body = Image.alpha_composite(bg, main_body)
-    body = make_body(main_body, cloth=cloth)
-    head = make_head(main_head, hair=hair)
-    # main_body.paste(main_head,(0,0))
-    # body.show()
-    # head.show()
+    body = make_body(main_body,back_hair=back_hair, cloth=cloth, main_head=main_head)
+    for i in range(len(body)) :
+        body[i].show()
+    '''
+    head = make_head(main_head, front_hair=front_hair)
+
     frame1 = Image.alpha_composite(body,head)
 
-    shift_head = ImageChops.offset(head,0,30)
+    shift_head = shift_img(head,shift_x,shift_y)
     frame2 = Image.alpha_composite(body,shift_head)
 
-    frame1.show()
+    # frame1.show()
     frame2.show()
-
+    '''
 
     # elapsed = (time.perf_counter() - start_time) * 1000
     # print ( "수행시간 = %0.2f ms" % elapsed)
