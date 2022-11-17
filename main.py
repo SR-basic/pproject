@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import utils, math
 import avatar
+import real_make_avatar as mk
 import numpy as np
 from keras.models import load_model
 from time import sleep
@@ -34,7 +35,7 @@ blink_judge = 4.5        # 눈을 감은 판정을 결정하는 종횡비 수 (�
 blink_animation = 0      # 눈을 감은 판정이 떴을때 1, 아닐때 0, 2는 1과  0사이의 애니메이션효과
 mouth_animation = 0      # 입의 움직임 0,1,2,3 숫자가 클수록 입의사이즈가 큼
 
-detected_emotion = "Neutral"    # 감정인식 값
+detected_emotion = 5    # 감정인식 값, re_class_labels 참조
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -49,6 +50,7 @@ face_classifier=cv2.CascadeClassifier('./face_emotion/haarcascade_frontalface_de
 classifier = load_model('./face_emotion/EmotionDetectionModel.h5')
 
 class_labels=['Angry','Happy','Neutral','Sad','Surprise']
+re_class_labels = ['Neutral','Happy','Sad','Angry','Surprise','None']
 
 
 
@@ -179,11 +181,10 @@ def test_draw_mouth(img,mesh_coords,test_mode) :
 def emotion_detection(img,before_emotion) :
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_classifier.detectMultiScale(gray, 1.2, 5)
-    detecte_emotion = before_emotion
 
 
     if len(faces) == 0 :
-        detecte_emotion = before_emotion
+        emotion = before_emotion
     else :
         face = faces[0]
         (x,y,w,h) = face
@@ -198,10 +199,19 @@ def emotion_detection(img,before_emotion) :
             roi = np.expand_dims(roi, axis=0)
 
             preds = classifier.predict(roi)[0]      # 딥러닝 자료를 가지고 판별
-            detecte_emotion = class_labels[preds.argmax()]
+            if preds.argmax() == 0 :
+                emotion = 3
+            elif preds.argmax() == 1 :
+                emotion = 1
+            elif preds.argmax() == 2:
+                emotion = 0
+            elif preds.argmax() == 3 :
+                emotion = 2
+            elif preds.argmax() == 4 :
+                emotion = 4
         else:                                       # 관심영역이 비어있는 상태면 인식 실패
-            detecte_emotion = "none"
-    return detecte_emotion
+            emotion = 5
+    return emotion
 
 
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
@@ -210,6 +220,7 @@ cap = cv2.VideoCapture(0) #캡쳐되는 이미지 변수 : cap
 
 
 if __name__ == "__main__" :         # main 함수
+    images = mk.main()
     # 이곳에 아바타를 먼저 선 생성하고 메인함수 구현 시작?
     with mp_face_mesh.FaceMesh(
             max_num_faces=1,
@@ -231,7 +242,7 @@ if __name__ == "__main__" :         # main 함수
 
             if FRAME_COUNTER %10 == 0 :     # 과부하가 꽤 되는 함수라 0.3초마다 한번씩 호출
                 detected_emotion = emotion_detection(frame,detected_emotion)
-            utils.colorBackgroundText(frame, f'emotion detected : {detected_emotion}', FONTS, 0.7, (30, 240), 2)
+            utils.colorBackgroundText(frame, f'emotion detected : {re_class_labels[detected_emotion]}', FONTS, 0.7, (30, 240), 2)
 
             if results.multi_face_landmarks:                            # 여러 얼굴을 감지하도록 되어있지만 구현 구조상 1로 고정한다.
                 for face_landmarks in results.multi_face_landmarks:
@@ -268,7 +279,14 @@ if __name__ == "__main__" :         # main 함수
 
                     if avatar_mode :
                         # 평상시 눈을 뜬 이미지, 눈을 감은 이미지 애니메이션 구현
-                        avatar.show_avatar(blink_animation,mouth_animation)
+                        avatar.show_avatar(blink_animation,mouth_animation,detected_emotion,images)
+                        # if detected_emotion == 5:
+                        #     detected_emotion == 0
+                        #
+                        # cv2.imshow('avatar', images[detected_emotion, blink_animation, mouth_animation])
+                        #
+                        # if blink_animation == 2:
+                        #     cv2.waitKey(70)
 
 
                     blink_animation = 0
@@ -312,6 +330,7 @@ if __name__ == "__main__" :         # main 함수
 
                 if cam :
                     cv2.imshow('testmode', frame)
+                    # cv2.waitKey(25) #자연스러운 애니메이션을 위해 부하를 넣어봤음...
                 if cv2.waitKey(2) & 0xFF == 27:  # esc가 눌렸을 경우 종료
                     break
 

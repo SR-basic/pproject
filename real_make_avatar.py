@@ -170,8 +170,8 @@ def main():
                 #만약 연산된 이미지 보고싶다면 아래 show주석 해제,위에있는 i ==2는 슬픔얼굴을 보여주겠죠
                 #   emotion[i][j][l].show()
                 cv_emotion[i][j][l] = rd.convert_PIL_to_CV(emotion[i][j][l])
-                cv2.imshow('test',cv_emotion[i][j][l])
-                cv2.waitKey(1000)
+                # cv2.imshow('test',cv_emotion[i][j][l])
+                # cv2.waitKey(1000)
 
     return cv_emotion
     # 요리가 완료된 변수는 emotion
