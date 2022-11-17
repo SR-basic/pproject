@@ -20,8 +20,9 @@ ctrl f 로 main함수의 emotion_detection부분의 호출을 time함수를 이�
 '''
 
 cam = True          # 카메라 프로그램이 켜집니다. 즉 실사용시엔 False가 될 예정
-test_mode = False   # 테스트 모드
+test_mode = True   # 테스트 모드
 avatar_mode = True  # 판떼기 프로그램이 켜집니다
+protect_mode = True    # 기본적으로 True가 되도록 짤 예정, 카메라를 가려서 흰색만 보이지만, 테스트모드의 True로 눈,입은 보입니다.
 
 # 변수들
 FRAME_COUNTER =0 # 카메라가 이미지를 받아오는 매 프레임을 수치화, 과부화 비중치가 높은 감정인식함수 지연호출
@@ -240,9 +241,12 @@ if __name__ == "__main__" :         # main 함수
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             results = face_mesh.process(rgb_frame)
 
-            if FRAME_COUNTER %10 == 0 :     # 과부하가 꽤 되는 함수라 0.3초마다 한번씩 호출
+            if FRAME_COUNTER %10 == 0 :     # 감정 감지 함수입니다!! 과부하가 꽤 되는 함수라 0.3초마다 한번씩 호출
                 detected_emotion = emotion_detection(frame,detected_emotion)
-            utils.colorBackgroundText(frame, f'emotion detected : {re_class_labels[detected_emotion]}', FONTS, 0.7, (30, 240), 2)
+            if protect_mode :
+                cv2.rectangle(frame,(0,0),(frame_width,frame_height),(0,0,0),cv2.FILLED)
+            utils.colorBackgroundText(frame, f'emotion detected : {re_class_labels[detected_emotion]}', FONTS, 0.7,(30, 240), 2) #감정감지 함수에서 이어지는 함수. 원래대로라면 감정감지 직후 그 값을 바로 표시해야하지만,
+                                                    #protect_mode가 켜져있다면 이 텍스트를 먹어버리기에 protect_mode를 선출력한뒤 텍스트 출력
 
             if results.multi_face_landmarks:                            # 여러 얼굴을 감지하도록 되어있지만 구현 구조상 1로 고정한다.
                 for face_landmarks in results.multi_face_landmarks:
