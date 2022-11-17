@@ -3,6 +3,7 @@ import numpy as np
 import img_reading as rd
 from PIL import Image
 from PIL import ImageChops
+import glob
 import time
 
 '''
@@ -20,6 +21,18 @@ cloth = rd.get_full_img_verPIL('./img/body/cloth.png', visual_mode)
 # hair = rd.get_full_img_verPIL('./img/head_parts/hair.png',visual_mode)
 back_hair = rd.get_full_img_verPIL('./img/head_parts/back_hair.png',visual_mode)
 front_hair = rd.get_full_img_verPIL('./img/head_parts/front_hair.png',visual_mode)
+
+pre_eyes= glob.glob('./img/head_parts/eye/*.png')
+eyes = []
+for i in pre_eyes:
+    img = rd.get_full_img_verPIL(i)
+    eyes.append(img)
+
+pre_mouth= glob.glob('./img/head_parts/mouth/*.png')
+mouth = []
+for i in pre_mouth:
+    img = rd.get_full_img_verPIL(i)
+    mouth.append(img)
 
 class_labels=['Angry','Happy','Neutral','Sad','Surprise']
 
@@ -74,7 +87,7 @@ def make_hair(front_hair,another1 = None,another2=None) :
         image_stack.append(another2)
 
     for image in image_stack :
-        main_head = Image.alpha_composite(main_head, image)
+        main_head = Image.alpha_composite(front_hair, image)
 
     return main_head
 '''
@@ -87,25 +100,29 @@ def make_body(layer_count) :
         main_body = Image.alpha_composite(main_body, main_head)
         '''
 
-# for test
-eyes = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-mouth = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-def make_face(eyes123=[],mouth123=[],front_head = None) :
-    face=[]
+def make_face(front_hair) :
     emotion = []
+    face=[]
     mouths = []
-    i = 1
+    front_hairs = []
+    for i in range (2) :
+        if i == 0 :
+            front_hairs.append(front_hair)
+        else :
+            front_hair = shift_img(front_hair, shift_x, shift_y)
+            front_hairs.append(front_hair)
     for eye in range(len(eyes)) :
         for mou in range(len(mouth)) :
             if eye//3 != mou//4 :
                 mou = (eye//3)*4+mou
-            # 여기에 얼굴과 입 합성 함수
-            # + 앞머리 합성 함수
-            mouths.append(i)
-            i += 1
-            print("face[",eye//3,"][",eye%3,"][",mou%4,"] = ",eyes[eye]," + ",mouth[mou])
+
+            img = Image.alpha_composite(eyes[eye],mouth[mou])
+            if eye%3 == 1:
+                img = Image.alpha_composite(front_hairs[1],img)
+            else :
+                img = Image.alpha_composite(front_hairs[0],img)
+            mouths.append(img)
             if mou%4 == 3 :
-                print("/n")
                 face.append(mouths)
                 mouths=[]
                 break
@@ -114,9 +131,9 @@ def make_face(eyes123=[],mouth123=[],front_head = None) :
             emotion.append(face)
             face=[]
 
+    return emotion
 
-    for i in range(5) :
-        print(emotion[i])
+
 
 def shift_img(img,shift_x=0,shift_y=0) :
     shifted_img = ImageChops.offset(img,shift_x,shift_y)
@@ -138,14 +155,26 @@ def main():
 
     # start_time = time.perf_counter()
 
-
+    # 배경과 뒷머리를 포함한 몸통을 +기본 머리를 만듭니다.
     body = make_body(main_body,back_hair=back_hair, cloth=cloth, main_head=main_head)
-    for i in range(len(body)) :
-        body[i].show()
-
+    # 머리카락을 머리카락 데코레이션과 함께 만듭니다.
     hair = make_hair(front_hair)
-    emotion = make_face(front_head=hair)
-    # 이러면 5*3*4의 앞얼굴 프레임이 생김
+    # hair.show()
+    # 불러운 입 배열과 눈 배열을 각각 합성하고, 앞에 머리카락을 붙힙니다.
+    emotion = make_face(front_hair=hair)
+
+    for i in range(len(emotion)) :
+        for j in range(len(emotion[0])) :
+            for l in range(len(emotion[0][0])) :
+                if j == 1 :
+                    emotion[i][j][l] = Image.alpha_composite(body[1], emotion[i][j][l])
+                else :
+                    emotion[i][j][l] = Image.alpha_composite(body[0], emotion[i][j][l])
+                if i!= 0 :
+                    emotion[i][j][l].show()
+
+
+       # 이러면 5*3*4의 앞얼굴 프레임이 생김
 
     # for문을 이용하여 body와 emotion을 하나씩 전부 합성
     # 3차원 배열을 유지하면서 body를 하나씩 합성하면 구현 쉬울듯
