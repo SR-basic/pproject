@@ -2,16 +2,6 @@ import cv2
 import numpy as np
 from PIL import Image
 
-def get_full_img_verPIL (location, face = True) :
-    img = Image.open(location) # png 에서 알파값을 받아오는 함수...
-    (width, height) = ((img.width*3)//10,(img.height*3)//10)
-    resize_img = img.resize((width,height),Image.HAMMING)
-
-    if face :
-        resize_img = resize_img.crop((0, 0, 673, 639))
-    # resize_img.show()
-    return resize_img
-
 
 def convert_PIL_to_CV (img) :
     numpy_image = np.array(img)
@@ -34,6 +24,15 @@ def get_full_img (location,resize = 0.3) :
         # cut_face(img)
     return img
 
+def get_full_img_verPIL (location, face = True) :
+    img = Image.open(location) # png 에서 알파값을 받아오는 함수...
+    (width, height) = ((img.width*3)//10,(img.height*3)//10)
+    resize_img = img.resize((width,height),Image.HAMMING)
+
+    if face :
+        resize_img = resize_img.crop((0, 0, 673, 639))
+    # resize_img.show()
+    return resize_img
 
 '''
 def resize_pic(img) :

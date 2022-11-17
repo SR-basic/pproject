@@ -1,5 +1,7 @@
+# 테스트로 만들어본 경험치용 파일
+# 사용되지 않으며, real_make_avatar를 사용합니다.
 
-
+'''
 import cv2
 import numpy as np
 
@@ -118,4 +120,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+'''

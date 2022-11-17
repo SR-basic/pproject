@@ -210,6 +210,7 @@ cap = cv2.VideoCapture(0) #캡쳐되는 이미지 변수 : cap
 
 
 if __name__ == "__main__" :         # main 함수
+    # 이곳에 아바타를 먼저 선 생성하고 메인함수 구현 시작?
     with mp_face_mesh.FaceMesh(
             max_num_faces=1,
             refine_landmarks=True,

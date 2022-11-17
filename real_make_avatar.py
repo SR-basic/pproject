@@ -154,18 +154,27 @@ def main():
 
     # body와 emotion을 합칩니다.
     # i = [기본,기쁨,슬픔,화남,놀람] j = [눈 뜸,눈 감음,눈 애니메이션프레임] l = [다문입,작은입,중간입,큰입]
+    # for문을 통해 3차원 배열을 전부 돌면서 모든 경우의 표정을 body와 결합시킵니다.
+    cv_emotion = [[[0 for _ in range(len(emotion[0][0]))] for _ in range(len(emotion[0]))] for _ in range(len(emotion))]
     for i in range(len(emotion)) :
         for j in range(len(emotion[0])) :
             for l in range(len(emotion[0][0])) :
                 if j == 1 :
+                    # j가 1일때, 즉 눈이 감겼을떄 나오는 애니메이션을 표현하기위해 body는 머리가 아래로 내려간 이미지,
+                    # emotion는 아래로내려간 후처리가 되어있지 않으므로 이 연산과정에서 아래로 내린다.
                     emotion[i][j][l] = shift_img(emotion[i][j][l], shift_x,shift_y)
                     emotion[i][j][l] = Image.alpha_composite(body[1], emotion[i][j][l])
                 else :
                     emotion[i][j][l] = Image.alpha_composite(body[0], emotion[i][j][l])
                 # if i == 2 :
-                    # emotion[i][j][l].show()
+                #만약 연산된 이미지 보고싶다면 아래 show주석 해제,위에있는 i ==2는 슬픔얼굴을 보여주겠죠
+                #   emotion[i][j][l].show()
+                cv_emotion[i][j][l] = rd.convert_PIL_to_CV(emotion[i][j][l])
+                cv2.imshow('test',cv_emotion[i][j][l])
+                cv2.waitKey(1000)
 
-
+    return cv_emotion
+    # 요리가 완료된 변수는 emotion
     # 그후 cv로 변환하든지, 사진으로 저장을 한번 시키던지(True,False로 저장여부를 뭍는게 좋을듯함)
     '''
     frame1 = Image.alpha_composite(body,head)
