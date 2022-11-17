@@ -104,23 +104,12 @@ def make_face(front_hair) :
     emotion = []
     face=[]
     mouths = []
-    front_hairs = []
-    for i in range (2) :
-        if i == 0 :
-            front_hairs.append(front_hair)
-        else :
-            front_hair = shift_img(front_hair, shift_x, shift_y)
-            front_hairs.append(front_hair)
     for eye in range(len(eyes)) :
         for mou in range(len(mouth)) :
             if eye//3 != mou//4 :
                 mou = (eye//3)*4+mou
-
             img = Image.alpha_composite(eyes[eye],mouth[mou])
-            if eye%3 == 1:
-                img = Image.alpha_composite(front_hairs[1],img)
-            else :
-                img = Image.alpha_composite(front_hairs[0],img)
+            img = Image.alpha_composite(front_hair,img)
             mouths.append(img)
             if mou%4 == 3 :
                 face.append(mouths)
@@ -163,21 +152,19 @@ def main():
     # 불러운 입 배열과 눈 배열을 각각 합성하고, 앞에 머리카락을 붙힙니다.
     emotion = make_face(front_hair=hair)
 
+    # body와 emotion을 합칩니다.
+    # i = [기본,기쁨,슬픔,화남,놀람] j = [눈 뜸,눈 감음,눈 애니메이션프레임] l = [다문입,작은입,중간입,큰입]
     for i in range(len(emotion)) :
         for j in range(len(emotion[0])) :
             for l in range(len(emotion[0][0])) :
                 if j == 1 :
+                    emotion[i][j][l] = shift_img(emotion[i][j][l], shift_x,shift_y)
                     emotion[i][j][l] = Image.alpha_composite(body[1], emotion[i][j][l])
                 else :
                     emotion[i][j][l] = Image.alpha_composite(body[0], emotion[i][j][l])
-                if i!= 0 :
-                    emotion[i][j][l].show()
+                # if i == 2 :
+                    # emotion[i][j][l].show()
 
-
-       # 이러면 5*3*4의 앞얼굴 프레임이 생김
-
-    # for문을 이용하여 body와 emotion을 하나씩 전부 합성
-    # 3차원 배열을 유지하면서 body를 하나씩 합성하면 구현 쉬울듯
 
     # 그후 cv로 변환하든지, 사진으로 저장을 한번 시키던지(True,False로 저장여부를 뭍는게 좋을듯함)
     '''
