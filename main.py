@@ -4,10 +4,12 @@ import utils, math
 import avatar
 import real_make_avatar as mk
 import numpy as np
+import UI
 from keras.models import load_model
 from time import sleep
 from keras_preprocessing.image import img_to_array
 from keras_preprocessing import image
+
 '''
 감정인식기능이 실행되는데 시간이 꽤 걸리는것같습니다. 
 개인적으로 0.1초마다 or 1초마다도 괜찮을듯한데 
@@ -19,9 +21,9 @@ ctrl f 로 main함수의 emotion_detection부분의 호출을 time함수를 이�
 
 '''
 
-cam = True          # 카메라 프로그램이 켜집니다. 즉 실사용시엔 False가 될 예정
-test_mode = True   # 테스트 모드
-avatar_mode = True  # 판떼기 프로그램이 켜집니다
+cam = True          # 카메라 프로그램이 켜집니다. 즉 실사용시엔 False가 될 예정 (UI 실전모드)
+test_mode = True   # 테스트 모드(기본값)
+avatar_mode = True  # 판떼기 프로그램이 켜집니다 (UI 모든모드)
 protect_mode = True    # 기본적으로 True가 되도록 짤 예정, 카메라를 가려서 흰색만 보이지만, 테스트모드의 True로 눈,입은 보입니다.
 
 # 변수들
@@ -143,7 +145,8 @@ def mouthRatio(img, landmarks, mouth_indices,test = False) :
 
 # 입 종횡비에 따라 어떤 입모양을 출력할 지 결정하는 함수 , 아바타모드가 켜져있다면 avatar.py에서 구현(예정)
 # 레이어 합성을통한 캐릭터 생성 이후 애니메이션 구현예정
-def mouth_judge (mouth_ratio) :
+def mouth_judge (frame,mouth_ratio) :
+    frame_height, frame_width = frame.shape[:2]
     mouth = 0       # mouth 값이 작을수록 입 모양이 작음
     if mouth_ratio <= 2 :
         utils.colorBackgroundText(frame, f'm.pic3 bgmouth', FONTS, 1.0, (int(frame_height / 2), 50), 2, utils.YELLOW, pad_x=6, pad_y=6, )
@@ -189,8 +192,8 @@ def emotion_detection(img,before_emotion) :
     else :
         face = faces[0]
         (x,y,w,h) = face
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)        # 얼굴감지를 한 부분을 네모로 그리기
-        utils.colorBackgroundText(frame, f'emotion detected', FONTS, 0.5, (x, y), 2, textColor=(255,255,255))
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)        # 얼굴감지를 한 부분을 네모로 그리기
+        utils.colorBackgroundText(img, f'emotion detected', FONTS, 0.5, (x, y), 2, textColor=(255,255,255))
         roi_gray = gray[y:y + h, x:x + w]                                   # 표정인식을 위한 gray_scale 변환
         roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA) # 학습모델과 비교하기 위해 같은사이즈로 변환
 
@@ -217,11 +220,16 @@ def emotion_detection(img,before_emotion) :
 
 # 아래 주석처리는 opencv의 기본 랜드마크 읽기로 테스트할때 주석 해제
 # drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
-cap = cv2.VideoCapture(0) #캡쳐되는 이미지 변수 : cap
 
 
-if __name__ == "__main__" :         # main 함수
+
+def main() :        # main 함수
+    cap = cv2.VideoCapture(0)  # 캡쳐되는 이미지 변수 : cap
+    # cam = UI.start_UI()
+
     images = mk.main()
+
+    global detected_emotion, FRAME_COUNTER, TOTAL_BLINKS,CEF_COUNTER, blink_animation
     # 이곳에 아바타를 먼저 선 생성하고 메인함수 구현 시작?
     with mp_face_mesh.FaceMesh(
             max_num_faces=1,
@@ -233,7 +241,6 @@ if __name__ == "__main__" :         # main 함수
             if not cap.isOpened() :                 # 웹캠을 탐지하지 못하면 오류발생
                 raise IOError("웹캠 찾지 못함.")
                 break
-
             FRAME_COUNTER += 1
             frame = cv2.resize(frame, None, fx=1.5, fy=1.5,
                                    interpolation=cv2.INTER_CUBIC)  # 원본의 가로 세로 fx,fy 배율, 리사이징 값
@@ -278,7 +285,7 @@ if __name__ == "__main__" :         # main 함수
                     mouth_ratio = mouthRatio(frame,mesh_coords, MOUTH, test=False)
                     utils.colorBackgroundText(frame, f'Mouth Ratio : {round(mouth_ratio, 2)}', FONTS, 0.7, (30, 200), 2,
                                               utils.PINK, utils.YELLOW)
-                    mouth_animation = mouth_judge(mouth_ratio)
+                    mouth_animation = mouth_judge(frame,mouth_ratio)
 
 
                     if avatar_mode :
@@ -342,3 +349,7 @@ if __name__ == "__main__" :         # main 함수
 
     cap.release()               # 웹캠의 정상적인 종료를 위해 반드시 첨부
     cv2.destroyAllWindows()
+
+
+if __name__ == "__main__" :
+    main()
