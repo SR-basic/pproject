@@ -49,11 +49,10 @@ def start_UI() :
         mainWindow.maxsize(800,540)
 
         # mainframe 생성
-        bg = tkinter.PhotoImage(file='bg.png')
-        canvas=Canvas(mainWindow,width=800,height=540)
-        canvas.pack(fill="both",expand=True)
-        canvas.create_image(0,0,image=bg,anchor="nw")
-        mainFrame=canvas
+        bg = tkinter.PhotoImage(file='./UIIMG/bg.png')
+        mainFrame=Canvas(mainWindow,width=800,height=540)
+        mainFrame.pack(fill="both",expand=True)
+        mainFrame.create_image(0,0,image=bg,anchor="nw")
 
         # mainFrame = customtkinter.CTkLabel(master=mainWindow,image=bg)
         # # mainFrame.place(x=350, y=0)
@@ -63,8 +62,8 @@ def start_UI() :
         # vid_lbl = customtkinter.CTkLabel(mainFrame, text="")
         # vid_lbl.place(x=0, y=0)
 
-        on_photo = tkinter.PhotoImage(file='test.png')
-        off_photo = tkinter.PhotoImage(file='test2.png')
+        on_photo = tkinter.PhotoImage(file='./UIIMG/test.png')
+        off_photo = tkinter.PhotoImage(file='./UIIMG/test2.png')
         image = show_frame(on_photo,off_photo)
         img_label = customtkinter.CTkLabel(mainFrame, image = image)
         img_label.grid(row=0,column=0,padx=30,pady=20,sticky='nw')
