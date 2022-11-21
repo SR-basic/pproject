@@ -223,7 +223,7 @@ def emotion_detection(img,before_emotion) :
 
 
 
-def main() :        # main 함수
+def main(cam = False) :        # main 함수
     cap = cv2.VideoCapture(0)  # 캡쳐되는 이미지 변수 : cap
     # cam = UI.start_UI()
 
