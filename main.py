@@ -5,6 +5,7 @@ import avatar
 import real_make_avatar as mk
 import numpy as np
 import UI
+import tkinter_opencv
 from keras.models import load_model
 from time import sleep
 from keras_preprocessing.image import img_to_array
@@ -49,8 +50,13 @@ RIGHT_EYE=[33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 16
 MOUTH = [78, 191, 80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95]
 
 # 아래 세 변수는 얼굴인식을 위한 변수
-face_classifier=cv2.CascadeClassifier('./face_emotion/haarcascade_frontalface_default.xml')
-classifier = load_model('./face_emotion/EmotionDetectionModel.h5')
+# face_classifier=cv2.CascadeClassifier('./face_emotion/haarcascade_frontalface_default.xml')
+# classifier = load_model('./face_emotion/EmotionDetectionModel.h5')
+
+face_classifier=cv2.CascadeClassifier('./made_face_emotion/haarcascade_frontalface_default.xml')
+classifier = load_model('./made_face_emotion/model_optimal.h5')
+classifier.load_weights('./made_face_emotion/model_weights.h5')
+
 
 class_labels=['Angry','Happy','Neutral','Sad','Surprise']
 re_class_labels = ['Neutral','Happy','Sad','Angry','Surprise','None']
@@ -341,6 +347,7 @@ def main(cam = False) :        # main 함수
 
                 if cam :
                     cv2.imshow('testmode', frame)
+                    # tkinter_opencv.UI_opencv(frame,name='testmode')
                     # cv2.waitKey(25) #자연스러운 애니메이션을 위해 부하를 넣어봤음...
                 if cv2.waitKey(2) & 0xFF == 27:  # esc가 눌렸을 경우 종료
                     break

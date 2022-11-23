@@ -14,7 +14,6 @@ def show_frame(on_photo=None,off_photo=None):
     cap = cv.VideoCapture(0)
     if cap:
         ret, frame = cap.read()
-        print(ret)
         if ret:
             image = on_photo
         else :
