@@ -4,6 +4,10 @@ import tkinter
 from tkinter import *
 import main
 
+'''
+UI구현, 프로그램의 시작은 이 UI로 시작됨
+물론 main함수를 작동하면 UI도움없이 프로그램이 켜지긴 함
+'''
 
 
 # 기본설정

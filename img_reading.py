@@ -1,8 +1,15 @@
+'''
+cv만으로 이미지를 다루기 어렵다고 판단, pillow를 사용해 간단한 alpha값 합성을 한다.
+이곳에서 실제 실행되는 main함수는 없으며, 호출되는 함수값을 불러 사용한다.
+pillow를 사용한 이미지 합성, pillow와 cv간의 이미지 변환을 맡는다.
+'''
+
+
 import cv2
 import numpy as np
 from PIL import Image
 
-
+# pil과 cv간의 상호변환 함수
 def convert_PIL_to_CV (img) :
     numpy_image = np.array(img)
     opencv_image = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2BGR)
@@ -13,10 +20,14 @@ def convert_CV_to_PIL (img) :
     pil_image = Image.fromarray(color_coverted)
     return pil_image
 
+
+# 크로마키를 만듭니다. r,g,b값이니 다른 크로마키 색상을 사용한다면 이 함수를 호출할떄 color=r,g,b를 사용해 주세요
 def make_bg (img,color = (0,215,0)) :
     bg_img = Image.new("RGBA",img.size,color)
     return bg_img
 
+# 알파값을 포함한 cv형태의 이미지를 불러옵니다.
+# location = 그림의 경로, resize = 불러올때 원본과의 배율
 def get_full_img (location,resize = 0.3) :
     img = cv2.imread(location, cv2.IMREAD_UNCHANGED) # png 에서 알파값을 받아오는 함수...
     img = cv2.resize(img, None, fx=resize, fy=resize, interpolation=cv2.INTER_AREA)
@@ -24,6 +35,8 @@ def get_full_img (location,resize = 0.3) :
         # cut_face(img)
     return img
 
+# 상단의 함수와 동일, resize값은 0.3으로 고정되었으며, pil형태로 불러옵니다.
+# 변수 face의 경우, True일경우 방송용으로 크롭된 상반신만, False일경우 전신이 나옵니다.
 def get_full_img_verPIL (location, face = True) :
     img = Image.open(location) # png 에서 알파값을 받아오는 함수...
     (width, height) = ((img.width*3)//10,(img.height*3)//10)
@@ -45,6 +58,7 @@ def resize_pic(img) :
     return img
 '''
 
+# 사용하지 않습니다. 개발당시 테스트를 위한 main함수입니다.
 def main():
 
     main_head = get_full_img_verPIL('./img/body/main_head.png',False)

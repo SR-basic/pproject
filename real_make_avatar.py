@@ -8,7 +8,7 @@ import time
 
 '''
 이 함수는 판떼기를 만드는 함수 
-알파값을 이용한 이미지합성을 다룬다.
+pillow를 사용한 알파값 이미지합성을 다룬다.
 '''
 
 
@@ -22,6 +22,7 @@ cloth = rd.get_full_img_verPIL('./img/body/cloth.png', visual_mode)
 back_hair = rd.get_full_img_verPIL('./img/head_parts/back_hair.png',visual_mode)
 front_hair = rd.get_full_img_verPIL('./img/head_parts/front_hair.png',visual_mode)
 
+# glob함수 : 경로안 조건부에 맞는 모든 파일들의 이름값을 return 한다.
 pre_eyes= glob.glob('./img/head_parts/eye/*.png')
 eyes = []
 for i in pre_eyes:

@@ -1,3 +1,12 @@
+'''
+개발 초기 만들었던 아바타모드 실행 파일
+주석처리된 부분들은 사용하지 않고, real_make_avatar를 통해 만들어진 이미지들을
+주석처리되지 않은 부분들이 새로운 창을 띄워 보여준다.
+'''
+
+
+
+
 import cv2
 import real_make_avatar as mk
 import main

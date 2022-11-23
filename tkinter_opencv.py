@@ -4,6 +4,11 @@ from PIL import Image, ImageTk
 from tkinter import *
 # import main
 
+'''
+cv에 tkinter를 연동하면 구현의 가능성이 매우 늘어날것같음!!
+그래서 연동하는 함수를 만들어보고자 함 (공사중)
+'''
+
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
